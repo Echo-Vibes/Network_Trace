@@ -5,7 +5,8 @@
       "Bash(mvn compile *)",
       "Bash(mvn clean *)",
       "Bash(iconv --version)",
-      "Bash(mvn *)"
+      "Bash(mvn *)",
+      "Bash(npm install *)"
     ]
   }
 }

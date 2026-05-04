@@ -2,9 +2,15 @@ package proxy;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 import config.ConfigLoader;
 import db.history_DAO;
+import web.AdminHandler;
 
 // implements Runnable接口，使得每个连接都在独立线程中处理
 public class proxy_handler implements Runnable {
@@ -55,6 +61,13 @@ public class proxy_handler implements Runnable {
             
             // 提取域名
             String domain = extract_domain(url, method);
+
+            // 管理页面请求，由代理直接响应，不转发
+            if ("admin.local".equalsIgnoreCase(domain)) {
+                handleAdmin(client_socket, method, url, reader);
+                return;
+            }
+
             System.out.println("[代理处理] 原始URL: " + url);
             System.out.println("[代理处理] 提取域名: " + domain);
             System.out.println("[代理处理] 请求方法: " + method);
@@ -91,6 +104,139 @@ public class proxy_handler implements Runnable {
             }
         }
     }
+
+    // ---- 管理页面 ----
+
+    private void handleAdmin(Socket socket, String method, String url, BufferedReader reader) throws IOException {
+        // 提取请求路径
+        String path = extractPath(url);
+        System.out.println("[管理页面] " + method + " " + path);
+
+        if (path.startsWith("/api/")) {
+            // 读取 POST 请求体
+            String body = null;
+            if ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method)) {
+                body = readRequestBody(reader);
+            }
+            String json = AdminHandler.handle(method, path, body);
+            AdminHandler.writeResponse(socket.getOutputStream(), json);
+        } else {
+            // 静态文件服务
+            serveStatic(socket, path);
+        }
+    }
+
+    // 从 url 中提取路径部分
+    private String extractPath(String url) {
+        // url 格式: http://admin.local/api/history?page=1 或 http://admin.local/
+        String tmp = url;
+        if (tmp.startsWith("http://")) tmp = tmp.substring(7);
+        if (tmp.startsWith("https://")) tmp = tmp.substring(8);
+        int slash = tmp.indexOf('/');
+        if (slash < 0) return "/";
+        return tmp.substring(slash);
+    }
+
+    // 读取请求体
+    private String readRequestBody(BufferedReader reader) throws IOException {
+        // 先读取剩余请求头以获取 Content-Length
+        int contentLength = -1;
+        String line;
+        while ((line = reader.readLine()) != null && !line.isEmpty()) {
+            if (line.toLowerCase().startsWith("content-length:")) {
+                try { contentLength = Integer.parseInt(line.substring(15).trim()); } catch (NumberFormatException e) {}
+            }
+        }
+        if (contentLength <= 0) return null;
+        char[] buf = new char[contentLength];
+        int total = 0;
+        while (total < contentLength) {
+            int n = reader.read(buf, total, contentLength - total);
+            if (n < 0) break;
+            total += n;
+        }
+        return new String(buf, 0, total);
+    }
+
+    // 静态文件服务
+    private void serveStatic(Socket socket, String path) throws IOException {
+        if (path.equals("/")) path = "/index.html";
+
+        // 安全检查：防止目录穿越
+        String safePath = path.replace('\\', '/');
+        if (safePath.contains("..") || safePath.contains("//")) {
+            send404(socket);
+            return;
+        }
+
+        byte[] content = loadStaticFile(safePath);
+        String contentType = guessContentType(safePath);
+        if (content == null) {
+            // SPA fallback: 非 API 路径返回 index.html
+            content = loadStaticFile("/index.html");
+            contentType = "text/html";
+        }
+        if (content == null) {
+            send404(socket);
+            return;
+        }
+        PrintWriter pw = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
+        pw.print("HTTP/1.1 200 OK\r\n");
+        pw.print("Content-Type: " + contentType + "; charset=UTF-8\r\n");
+        pw.print("Content-Length: " + content.length + "\r\n");
+        pw.print("Connection: close\r\n");
+        pw.print("\r\n");
+        pw.flush();
+        socket.getOutputStream().write(content);
+        socket.getOutputStream().flush();
+    }
+
+    private byte[] loadStaticFile(String path) {
+        // 先从 classpath 加载
+        InputStream in = getClass().getClassLoader().getResourceAsStream("web" + path);
+        if (in != null) {
+            try {
+                return in.readAllBytes();
+            } catch (IOException e) {
+            } finally {
+                try { in.close(); } catch (IOException e) {}
+            }
+        }
+        // classpath 没有则尝试文件系统（开发模式：frontend/dist/）
+        try {
+            Path file = Paths.get("frontend/dist", path);
+            if (Files.exists(file)) {
+                return Files.readAllBytes(file);
+            }
+        } catch (IOException e) {
+        }
+        return null;
+    }
+
+    private String guessContentType(String path) {
+        String mime = URLConnection.guessContentTypeFromName(path);
+        if (mime != null) return mime;
+        if (path.endsWith(".js")) return "application/javascript";
+        if (path.endsWith(".css")) return "text/css";
+        if (path.endsWith(".html")) return "text/html";
+        if (path.endsWith(".json")) return "application/json";
+        if (path.endsWith(".svg")) return "image/svg+xml";
+        return "application/octet-stream";
+    }
+
+    private void send404(Socket socket) throws IOException {
+        String body = "<h1>404 Not Found</h1>";
+        PrintWriter pw = new PrintWriter(socket.getOutputStream());
+        pw.print("HTTP/1.1 404 Not Found\r\n");
+        pw.print("Content-Type: text/html; charset=UTF-8\r\n");
+        pw.print("Content-Length: " + body.getBytes(StandardCharsets.UTF_8).length + "\r\n");
+        pw.print("Connection: close\r\n");
+        pw.print("\r\n");
+        pw.print(body);
+        pw.flush();
+    }
+
+    // ---- 域名提取 ----
 
     // 从 URL 中提取域名
     private String extract_domain(String url, String method) {
@@ -167,6 +313,7 @@ public class proxy_handler implements Runnable {
             Socket target_socket = new Socket(host, port);
 
             // 两个线程：浏览器 → 目标网站，目标网站 → 浏览器
+            // 任一方向断流时关闭对端 socket，避免另一个线程永久阻塞在 read()
             Thread t1 = new Thread(() -> {
                 try {
                     byte[] buffer = new byte[8192];
@@ -178,6 +325,8 @@ public class proxy_handler implements Runnable {
                         out2.flush();
                     }
                 } catch (IOException e) {
+                } finally {
+                    try { target_socket.close(); } catch (IOException e) {}
                 }
             });
 
@@ -192,6 +341,8 @@ public class proxy_handler implements Runnable {
                         out2.flush();
                     }
                 } catch (IOException e) {
+                } finally {
+                    try { client_socket.close(); } catch (IOException e) {}
                 }
             });
 
@@ -200,7 +351,7 @@ public class proxy_handler implements Runnable {
             t1.join();
             t2.join();
 
-            target_socket.close();
+            try { target_socket.close(); } catch (IOException e) {}
             return;
         }
 
