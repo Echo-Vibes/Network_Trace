@@ -7,10 +7,10 @@ public class TestDBConnection {
 
     private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=WebTrackDB;encrypt=false;trustServerCertificate=true;";
     private static final String USER = "sa";
-    private static final String PASSWORD = "123456"; // ¸Ä³ÉÄãÉèÖÃµÄ sa ÃÜÂë
+    private static final String PASSWORD = "123456"; // æ”¹æˆä½ è®¾ç½®çš„ sa å¯†ç 
 
     public static void main(String[] args) {
-        System.out.println("ÕıÔÚ²âÊÔÁ¬½Óµ½ SQL Server...");
+        System.out.println("æ­£åœ¨æµ‹è¯•è¿æ¥åˆ° SQL Server...");
         System.out.println("URL: " + URL);
         System.out.println("User: " + USER);
         System.out.println();
@@ -19,8 +19,8 @@ public class TestDBConnection {
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery("SELECT * FROM Blacklist")) {
 
-            System.out.println("Êı¾İ¿âÁ¬½Ó³É¹¦£¡");
-            System.out.println("\nµ±Ç° Blacklist ±íÖĞµÄÊı¾İ£º");
+            System.out.println("æ•°æ®åº“è¿æ¥æˆåŠŸï¼");
+            System.out.println("\nå½“å‰ Blacklist è¡¨ä¸­çš„æ•°æ®ï¼š");
             System.out.println("ID | Keyword");
             System.out.println("---|---------");
 
@@ -31,8 +31,8 @@ public class TestDBConnection {
             }
 
         } catch (Exception e) {
-            System.err.println("Êı¾İ¿âÁ¬½Ó»ò²éÑ¯Ê§°Ü£¡");
-            System.err.println("´íÎóĞÅÏ¢: " + e.getMessage());
+            System.err.println("æ•°æ®åº“è¿æ¥æˆ–æŸ¥è¯¢å¤±è´¥ï¼");
+            System.err.println("é”™è¯¯ä¿¡æ¯: " + e.getMessage());
             e.printStackTrace();
         }
     }

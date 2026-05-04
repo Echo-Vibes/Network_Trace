@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn --version)",
+      "Bash(mvn compile *)",
+      "Bash(mvn clean *)",
+      "Bash(iconv --version)",
+      "Bash(mvn *)"
+    ]
+  }
+}

@@ -1,28 +1,32 @@
 package db;
 
 import java.sql.*;
+import config.ConfigLoader;
 
 public class database_utility {
-    //  ˝æ›ø‚¡¨Ω”œ‡πÿ≈‰÷√
-    private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=WebTrackDB;encrypt=false;trustServerCertificate=true;";
-    private static final String USER = "sa";
-    private static final String PASSWORD = "123456";
 
-    // º”‘ÿ ˝æ›ø‚«˝∂Ø
+    private static final String URL;
+    private static final String USER;
+    private static final String PASSWORD;
+
     static {
         try {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
         } catch (ClassNotFoundException e) {
-            System.err.println("JDBC«˝∂Øº”‘ÿ ß∞‹: " + e.getMessage());
+            System.err.println("JDBC driver load failed: " + e.getMessage());
         }
+
+        URL = ConfigLoader.get("db.url",
+                "jdbc:sqlserver://localhost:1433;databaseName=WebTrackDB;encrypt=false;trustServerCertificate=true;");
+        USER = ConfigLoader.get("db.user", "sa");
+        PASSWORD = ConfigLoader.get("db.password", "123456");
     }
 
-    // ªÒ»° ˝æ›ø‚¡¨Ω”
     public static Connection getConnection() throws SQLException {
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 
-    // πÿ±’ ˝æ›ø‚◊ ‘¥
+    // ÂÖ≥Èó≠Êï∞ÊçÆÂ∫ìËµÑÊ∫ê
     public static void close(Connection conn, PreparedStatement ps, ResultSet rs) {
         try {
             if (rs != null)
