@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="GBK">
+    <title>系统性能 - WebTrackDB</title>
+    <style>
+        .ht { text-align: center; color: cadetblue; font-family: 微软雅黑; }
+        .tab { width: 700px; border: 3px solid cadetblue; margin: 0px auto; border-radius: 5px; font-family: 微软雅黑; border-collapse: collapse; }
+        .ltr td { border: 1px solid powderblue; padding: 8px 12px; }
+        .ltr th { border: 1px solid powderblue; padding: 8px 12px; background-color: powderblue; color: #333; font-weight: bold; }
+        .btn1 { border: 2px solid powderblue; border-radius: 4px; width: 120px; background-color: antiquewhite; font-family: 微软雅黑; cursor: pointer; padding: 4px 0; }
+        .buttonContainer { text-align: center; }
+        a { color: cadetblue; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .bar-bg { background: #e0e0e0; border-radius: 4px; height: 20px; width: 200px; display: inline-block; vertical-align: middle; }
+        .bar-fill { display: inline-block; height: 20px; border-radius: 4px; transition: width 0.5s; }
+        .stat-label { width: 80px; display: inline-block; text-align: right; margin-right: 8px; font-weight: bold; }
+        .stat-value { display: inline-block; width: 70px; text-align: right; margin-left: 8px; font-family: Consolas, monospace; }
+        .if-row td { padding: 10px 12px; }
+        .if-name { font-weight: bold; font-size: 14px; }
+        .if-speed { font-family: Consolas, monospace; font-size: 13px; }
+        .if-arrow { color: cadetblue; }
+        .nodata { color: #999; text-align: center; }
+    </style>
+    <script>
+        var refreshTimer = null;
+
+        function startMonitor() {
+            fetchData();
+            if (refreshTimer) clearInterval(refreshTimer);
+            refreshTimer = setInterval(fetchData, 3000);
+        }
+
+        function fetchData() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/monitor', true);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        var data = JSON.parse(xhr.responseText);
+                        renderData(data);
+                        document.getElementById('statusMsg').innerText = '';
+                    } catch (e) {
+                        handleBadResponse();
+                    }
+                } else {
+                    handleBadResponse();
+                }
+            };
+            xhr.onerror = function() {
+                document.getElementById('statusMsg').innerText = '连接失败，正在重试...';
+            };
+            xhr.send();
+        }
+
+        function handleBadResponse() {
+            var text = (arguments[0] && arguments[0].currentTarget) ? arguments[0].currentTarget.responseText : '';
+            if (text.indexOf('login') !== -1 || text.indexOf('登录') !== -1) {
+                window.location.href = 'login.html';
+                return;
+            }
+            document.getElementById('statusMsg').innerText = '数据加载失败，正在重试...';
+        }
+
+        function renderData(data) {
+            if (data.error) {
+                document.getElementById('statusMsg').innerText = data.error;
+                return;
+            }
+            renderCpu(data.cpu);
+            renderMemory(data.memory);
+            renderNetwork(data.network);
+        }
+
+        function renderCpu(cpu) {
+            var pct = cpu.percent;
+            var fill = document.getElementById('cpuFill');
+            var val = document.getElementById('cpuVal');
+            if (pct < 0) {
+                fill.style.width = '0%';
+                fill.style.background = '#e0e0e0';
+                val.innerText = '-- %';
+                return;
+            }
+            fill.style.width = Math.min(pct, 100) + '%';
+            if (pct < 50) fill.style.background = '#5cb85c';
+            else if (pct < 80) fill.style.background = '#f0ad4e';
+            else fill.style.background = '#d9534f';
+            val.innerText = pct.toFixed(1) + ' %';
+        }
+
+        function renderMemory(mem) {
+            var fill = document.getElementById('memFill');
+            var val = document.getElementById('memVal');
+            var detail = document.getElementById('memDetail');
+            if (mem.percent < 0) {
+                fill.style.width = '0%';
+                fill.style.background = '#e0e0e0';
+                val.innerText = '-- %';
+                detail.innerText = '';
+                return;
+            }
+            fill.style.width = Math.min(mem.percent, 100) + '%';
+            if (mem.percent < 50) fill.style.background = '#5cb85c';
+            else if (mem.percent < 80) fill.style.background = '#f0ad4e';
+            else fill.style.background = '#d9534f';
+            val.innerText = mem.percent.toFixed(1) + ' %';
+            detail.innerText = formatSize(mem.used) + ' / ' + formatSize(mem.total);
+        }
+
+        function renderNetwork(nets) {
+            var tbody = document.getElementById('netBody');
+            tbody.innerHTML = '';
+            if (!nets || nets.length === 0) {
+                tbody.innerHTML = '<tr class="ltr"><td colspan="3" class="nodata">未检测到活动网络接口</td></tr>';
+                return;
+            }
+            for (var i = 0; i < nets.length; i++) {
+                var net = nets[i];
+                var tr = document.createElement('tr');
+                tr.className = 'ltr if-row';
+                var nameHtml = escapeHtml(net.name);
+                var downHtml = '<span class="if-arrow">↓</span> ' + formatBps(net.downloadBps);
+                var upHtml = '<span class="if-arrow">↑</span> ' + formatBps(net.uploadBps);
+                tr.innerHTML = '<td class="if-name">' + nameHtml + '</td>'
+                    + '<td class="if-speed">' + downHtml + '</td>'
+                    + '<td class="if-speed">' + upHtml + '</td>';
+                tbody.appendChild(tr);
+            }
+        }
+
+        function formatSize(bytes) {
+            if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(2) + ' GB';
+            if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
+            if (bytes >= 1024) return (bytes / 1024).toFixed(0) + ' KB';
+            return bytes + ' B';
+        }
+
+        function formatBps(bps) {
+            if (bps >= 1048576) return (bps / 1048576).toFixed(2) + ' MB/s';
+            if (bps >= 1024) return (bps / 1024).toFixed(1) + ' KB/s';
+            return bps + ' B/s';
+        }
+
+        function escapeHtml(s) {
+            if (!s) return '';
+            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        window.onload = startMonitor;
+        window.onbeforeunload = function() {
+            if (refreshTimer) clearInterval(refreshTimer);
+        };
+    </script>
+</head>
+<body>
+    <h1 class="ht">系统性能监控</h1>
+    <h3 class="ht"><a href="index.html">返回首页</a></h3>
+
+    <br/>
+    <table class="tab" cellspacing="0">
+        <tr class="ltr">
+            <th colspan="3">CPU &amp; 内存</th>
+        </tr>
+        <tr class="ltr">
+            <td style="width:80px;"><span class="stat-label">CPU</span></td>
+            <td>
+                <span class="bar-bg"><span class="bar-fill" id="cpuFill" style="width:0%;background:#e0e0e0;"></span></span>
+                <span class="stat-value" id="cpuVal">-- %</span>
+            </td>
+        </tr>
+        <tr class="ltr">
+            <td><span class="stat-label">内存</span></td>
+            <td>
+                <span class="bar-bg"><span class="bar-fill" id="memFill" style="width:0%;background:#e0e0e0;"></span></span>
+                <span class="stat-value" id="memVal">-- %</span>
+            </td>
+        </tr>
+        <tr class="ltr">
+            <td></td>
+            <td style="font-size:12px;color:#666;" id="memDetail"></td>
+        </tr>
+    </table>
+
+    <br/>
+    <table class="tab" cellspacing="0">
+        <tr class="ltr">
+            <th style="width:200px;">网络接口</th>
+            <th style="width:150px;">下行速度</th>
+            <th style="width:150px;">上行速度</th>
+        </tr>
+        <tbody id="netBody">
+            <tr class="ltr"><td colspan="3" class="nodata">正在检测...</td></tr>
+        </tbody>
+    </table>
+
+    <br/>
+    <div class="buttonContainer">
+        <button class="btn1"><a href="index.html">返回首页</a></button>
+    </div>
+
+    <br/>
+    <h4 class="ht" style="color:#999;" id="statusMsg"></h4>
+</body>
+</html>

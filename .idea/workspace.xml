@@ -5,26 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e8c9345b-f9bf-4b0c-a46e-c6dda26d5854" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/manage/lib/tomcat-annotations-api-9.0.83.jar" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/manage/lib/tomcat-embed-core-9.0.83.jar" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/manage/src/Main.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/manage/src/controller/BlacklistServlet.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/manage/src/controller/HistoryServlet.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/manage/src/db/history_DAO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/manage/src/model/Blacklist.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/manage/src/model/History.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/manage/src/service/BlacklistService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/manage/src/service/HistoryService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/init.sql" beforeDir="false" afterPath="$PROJECT_DIR$/manage/database/init.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/mssql-jdbc-13.4.0.jre11.jar" beforeDir="false" afterPath="$PROJECT_DIR$/manage/lib/mssql-jdbc-13.4.0.jre11.jar" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MainTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/manage/src/MainTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/TestDBConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/manage/src/TestDBConnection.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/TestProxyManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/manage/src/TestProxyManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/db/database_utility.java" beforeDir="false" afterPath="$PROJECT_DIR$/manage/src/db/database_utility.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/db/history_DAO.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/manager/proxy_manager.java" beforeDir="false" afterPath="$PROJECT_DIR$/manage/src/manager/proxy_manager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/proxy/proxy_handler.java" beforeDir="false" afterPath="$PROJECT_DIR$/manage/src/proxy/proxy_handler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/proxy/proxy_server.java" beforeDir="false" afterPath="$PROJECT_DIR$/manage/src/proxy/proxy_server.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Network_Trace.iml" beforeDir="false" afterPath="$PROJECT_DIR$/Network_Trace.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/manage/src/Launcher.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/manage/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/manage/src/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/work/Tomcat/localhost/ROOT/SESSIONS.ser" beforeDir="false" afterPath="$PROJECT_DIR$/work/Tomcat/localhost/ROOT/SESSIONS.ser" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -58,6 +45,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
+    "SHELLCHECK.PATH": "C:\\Users\\31806\\AppData\\Roaming\\JetBrains\\IntelliJIdea2025.3\\plugins\\Shell Script\\shellcheck.exe",
     "git-widget-placeholder": "old",
     "kotlin-language-version-configured": "true",
     "project.structure.last.edited": "库",
