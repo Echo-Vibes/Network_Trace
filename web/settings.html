@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="GBK">
+    <title>修改账号 - WebTrackDB</title>
+    <style>
+        .ht { text-align: center; color: cadetblue; font-family: 幼圆; }
+        .tab { width: 500px; border: 5px solid cadetblue; margin: 0px auto; border-radius: 5px; font-family: 幼圆; }
+        .ltr td { border: 1px solid powderblue; padding: 8px 12px; }
+        .ipt { border: 1px solid powderblue; width: 200px; padding: 4px 6px; }
+        .btn1 { border: 2px solid powderblue; border-radius: 4px; width: 100px; background-color: antiquewhite; font-family: 幼圆; cursor: pointer; padding: 4px 0; }
+        .buttonContainer { text-align: center; }
+        a { color: cadetblue; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .msg { color: rgb(230,87,51); font-family: 幼圆; font-size: 13px; }
+        .ok { color: green; font-family: 幼圆; font-size: 13px; }
+    </style>
+    <script>
+        function submitUsername() {
+            var newUsername = document.getElementById('newUsernameInput').value;
+            var msgSpan = document.getElementById('usernameMsg');
+            if (!newUsername.trim()) {
+                msgSpan.innerText = '用户名不能为空';
+                msgSpan.className = 'msg';
+                return false;
+            }
+            msgSpan.innerText = '';
+            document.getElementById('usernameForm').submit();
+            return false;
+        }
+
+        function submitPassword() {
+            var oldPwd = document.getElementById('oldPwdInput').value;
+            var newPwd = document.getElementById('newPwdInput').value;
+            var confirmPwd = document.getElementById('confirmPwdInput').value;
+            var msgSpan = document.getElementById('pwdMsg');
+            if (!oldPwd.trim()) {
+                msgSpan.innerText = '请输入旧密码';
+                msgSpan.className = 'msg';
+                return false;
+            }
+            if (!newPwd.trim()) {
+                msgSpan.innerText = '新密码不能为空';
+                msgSpan.className = 'msg';
+                return false;
+            }
+            if (newPwd !== confirmPwd) {
+                msgSpan.innerText = '两次输入的新密码不一致';
+                msgSpan.className = 'msg';
+                return false;
+            }
+            msgSpan.innerText = '';
+            document.getElementById('passwordForm').submit();
+            return false;
+        }
+
+        function handleFrame() {
+            var frame = document.getElementById('dataFrame');
+            var doc = frame.contentDocument || frame.contentWindow.document;
+            var text = doc.body.textContent || doc.body.innerText || '';
+            if (!text.trim()) return;
+            try {
+                var result = JSON.parse(text);
+            } catch (e) {
+                return;
+            }
+            var msg = result.msg || '';
+            if (msg.indexOf('成功') !== -1) {
+                document.getElementById('usernameMsg').innerText = '';
+                document.getElementById('pwdMsg').innerText = msg;
+                document.getElementById('pwdMsg').className = 'ok';
+                document.getElementById('usernameMsg').className = 'ok';
+                // 清空密码输入框
+                document.getElementById('oldPwdInput').value = '';
+                document.getElementById('newPwdInput').value = '';
+                document.getElementById('confirmPwdInput').value = '';
+            } else if (msg) {
+                document.getElementById('pwdMsg').innerText = msg;
+                document.getElementById('pwdMsg').className = 'msg';
+            }
+        }
+
+        // 单独处理用户名修改的返回
+        function handleUsernameFrame() {
+            var frame = document.getElementById('usernameFrame');
+            var doc = frame.contentDocument || frame.contentWindow.document;
+            var text = doc.body.textContent || doc.body.innerText || '';
+            if (!text.trim()) return;
+            try {
+                var result = JSON.parse(text);
+            } catch (e) {
+                return;
+            }
+            var msg = result.msg || '';
+            var msgSpan = document.getElementById('usernameMsg');
+            msgSpan.innerText = msg;
+            msgSpan.className = msg.indexOf('成功') !== -1 ? 'ok' : 'msg';
+            if (msg.indexOf('成功') !== -1) {
+                document.getElementById('newUsernameInput').value = '';
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1 class="ht">修改管理员账号</h1>
+    <h3 class="ht"><a href="index.html">返回首页</a></h3>
+
+    <!-- 修改用户名 -->
+    <form id="usernameForm" method="post" action="/settings?type=username" target="usernameFrame">
+        <table class="tab" cellspacing="0px">
+            <tr class="ltr">
+                <th colspan="2" style="background-color:powderblue;">修改用户名</th>
+            </tr>
+            <tr class="ltr">
+                <td style="width:100px;">新用户名</td>
+                <td>
+                    <input class="ipt" type="text" id="newUsernameInput" name="newUsername" placeholder="输入新用户名">
+                </td>
+            </tr>
+            <tr class="ltr">
+                <td colspan="2" class="buttonContainer">
+                    <input class="btn1" type="button" value="修改用户名" onclick="submitUsername()">
+                </td>
+            </tr>
+            <tr class="ltr">
+                <td colspan="2" style="text-align:center;">
+                    <span id="usernameMsg"></span>
+                </td>
+            </tr>
+        </table>
+    </form>
+
+    <br/>
+
+    <!-- 修改密码 -->
+    <form id="passwordForm" method="post" action="/settings?type=password" target="dataFrame">
+        <table class="tab" cellspacing="0px">
+            <tr class="ltr">
+                <th colspan="2" style="background-color:powderblue;">修改密码</th>
+            </tr>
+            <tr class="ltr">
+                <td style="width:100px;">旧密码</td>
+                <td>
+                    <input class="ipt" type="password" id="oldPwdInput" name="oldPassword" placeholder="输入旧密码">
+                </td>
+            </tr>
+            <tr class="ltr">
+                <td>新密码</td>
+                <td>
+                    <input class="ipt" type="password" id="newPwdInput" name="newPassword" placeholder="输入新密码">
+                </td>
+            </tr>
+            <tr class="ltr">
+                <td>确认新密码</td>
+                <td>
+                    <input class="ipt" type="password" id="confirmPwdInput" placeholder="再次输入新密码">
+                </td>
+            </tr>
+            <tr class="ltr">
+                <td colspan="2" class="buttonContainer">
+                    <input class="btn1" type="button" value="修改密码" onclick="submitPassword()">
+                </td>
+            </tr>
+            <tr class="ltr">
+                <td colspan="2" style="text-align:center;">
+                    <span id="pwdMsg"></span>
+                </td>
+            </tr>
+        </table>
+    </form>
+
+    <br/>
+    <div class="buttonContainer">
+        <button class="btn1" style="width:120px;">
+            <a href="index.html">返回首页</a>
+        </button>
+    </div>
+
+    <iframe name="usernameFrame" id="usernameFrame" style="display:none;" onload="handleUsernameFrame()"></iframe>
+    <iframe name="dataFrame" id="dataFrame" style="display:none;" onload="handleFrame()"></iframe>
+</body>
+</html>

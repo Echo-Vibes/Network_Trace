@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="GBK">
+    <title>WebTrackDB - 网络监控面板</title>
+    <style>
+        .ht {
+            text-align: center;
+            color: cadetblue;
+            font-family: 幼圆;
+        }
+        .tab {
+            width: 800px;
+            border: 3px solid cadetblue;
+            margin: 0px auto;
+            border-radius: 5px;
+            font-family: 幼圆;
+            border-collapse: collapse;
+        }
+        .ltr td {
+            border: 1px solid powderblue;
+            padding: 8px 12px;
+        }
+        .ipt {
+            border: 1px solid powderblue;
+            width: 200px;
+            padding: 4px 6px;
+        }
+        .btn1 {
+            border: 2px solid powderblue;
+            border-radius: 4px;
+            width: 80px;
+            background-color: antiquewhite;
+            font-family: 幼圆;
+            cursor: pointer;
+            padding: 4px 0;
+        }
+        .buttonContainer {
+            text-align: center;
+        }
+        a {
+            color: cadetblue;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="ht">WebTrackDB 网络监控面板</h1>
+    <h3 class="ht">请选择操作</h3>
+
+    <table class="tab" cellspacing="0px">
+        <tr class="ltr">
+            <td style="text-align: center; padding: 30px;">
+                <button class="btn1" style="width: 160px; font-size: 16px;">
+                    <a href="history.html">访问历史</a>
+                </button>
+            </td>
+            <td style="text-align: center; padding: 30px;">
+                <button class="btn1" style="width: 160px; font-size: 16px;">
+                    <a href="blacklist.html">黑名单管理</a>
+                </button>
+            </td>
+        </tr>
+    </table>
+
+    <br/>
+    <table class="tab" cellspacing="0px">
+        <tr class="ltr">
+            <td style="text-align: center; padding: 20px;">
+                <button class="btn1" style="width: 160px; font-size: 16px;">
+                    <a href="settings.html">修改账号</a>
+                </button>
+            </td>
+            <td style="text-align: center; padding: 20px;">
+                <button class="btn1" style="width: 160px; font-size: 16px;">
+                    <a href="/login?action=logout">退出登录</a>
+                </button>
+            </td>
+        </tr>
+    </table>
+
+    <br/>
+    <h4 class="ht" style="color: #999;">当前代理状态：运行中 | 端口：8080</h4>
+</body>
+</html>

@@ -1,0 +1,8 @@
+<configuration name="Main" type="Application" factoryName="Application">
+  <option name="MAIN_CLASS_NAME" value="Main" />
+  <module name="Network_Trace" />
+  <option name="VM_PARAMETERS" value="--module-path=&quot;D:\git\Network_Trace\manage\lib\javafx.base.jar;D:\git\Network_Trace\manage\lib\javafx.controls.jar;D:\git\Network_Trace\manage\lib\javafx.fxml.jar;D:\git\Network_Trace\manage\lib\javafx.graphics.jar;D:\git\Network_Trace\manage\lib\javafx.media.jar;D:\git\Network_Trace\manage\lib\javafx.swing.jar;D:\git\Network_Trace\manage\lib\javafx.web.jar&quot; --add-modules=javafx.controls,javafx.fxml,javafx.web,javafx.swing -Djava.library.path=D:\git\Network_Trace\manage\lib" />
+  <method v="2">
+    <option name="Make" enabled="true" />
+  </method>
+</configuration>
