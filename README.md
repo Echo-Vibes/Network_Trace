@@ -3,16 +3,26 @@
 
 
 ## 各模块作用：  
-+ 数据库工具 database.utility.java
++ 数据库工具 database_utility.java
 + 数据库访问对象 history_DAO.java
++ 管理员数据访问 admin_DAO.java
 + 代理管理器（备份、更改、恢复） proxy_manager.java
 + 代理服务器（监听端口、接受连接、分配线程） proxy_server.java
++ 代理请求处理（HTTP/HTTPS转发、黑名单拦截、访问记录） proxy_handler.java
++ 认证过滤器（Session登录鉴权，未登录重定向） AuthFilter.java
++ Servlet控制器（登录、历史记录、黑名单、监控、设置）
++ 系统监控服务（OSHI采集CPU/内存/网络数据） MonitorService.java
++ 应用入口（启动代理、Tomcat、JavaFX窗口，注册ShutdownHook） Main.java
 
 
 ## 代码特征
 + 使用C/S架构，浏览器是客户端，代理服务器作为服务端，数据库是数据存储层
 + 使用了try-with-resources语法来节省资源，避免资源泄露
 + 使用ExecutorService线程池来管理浏览器连接，避免了频繁创建销毁线程的操作
++ JDBC使用PreparedStatement预编译SQL，防止SQL注入攻击
++ 通过Runtime.getRuntime().addShutdownHook注册钩子，确保应用退出时恢复系统代理设置
++ 基于Session的登录认证机制，AuthFilter拦截未登录请求
++ 使用OSHI库采集系统资源信息（CPU、内存、网络），在管理面板实时展示
 
 
 
