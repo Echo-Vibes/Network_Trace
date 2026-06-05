@@ -1,85 +1,264 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="GBK">
-    <title>µÇÂ¼ - WebTrackDB</title>
+    <meta charset="UTF-8">
+    <title>WebTrackDB - ç™»å½•</title>
     <style>
-        .ht { text-align: center; color: cadetblue; font-family: Ó×Ô²; }
-        .tab { width: 500px; border: 5px solid cadetblue; margin: 0px auto; border-radius: 5px; font-family: Ó×Ô²; }
-        .ltr td { border: 1px solid powderblue; padding: 8px 12px; }
-        .ipt { border: 1px solid powderblue; width: 200px; padding: 4px 6px; }
-        .btn1 { border: 2px solid powderblue; border-radius: 4px; width: 80px; background-color: antiquewhite; font-family: Ó×Ô²; cursor: pointer; padding: 4px 0; }
-        .buttonContainer { text-align: center; }
-        .msg { color: rgb(230,87,51); font-family: Ó×Ô²; font-size: 13px; }
-    </style>
-    <script>
-        function submitLogin() {
-            var username = document.getElementById('usernameInput').value;
-            var password = document.getElementById('userPwdInput').value;
-            var msgSpan = document.getElementById('loginMsg');
-            if (!username.trim()) {
-                msgSpan.innerText = 'ÇëÊäÈëÕËºÅ';
-                return false;
-            }
-            if (!password.trim()) {
-                msgSpan.innerText = 'ÇëÊäÈëÃÜÂë';
-                return false;
-            }
-            msgSpan.innerText = '';
-            document.getElementById('loginForm').submit();
-            return false;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        function handleResult() {
-            var frame = document.getElementById('dataFrame');
-            var doc = frame.contentDocument || frame.contentWindow.document;
-            var text = doc.body.textContent || doc.body.innerText || '';
-            if (!text.trim()) return;
-            try {
-                var result = JSON.parse(text);
-            } catch (e) {
-                return;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* ä¸»å®¹å™¨ - æ¯›ç»ç’ƒæ•ˆæœ */
+        .login-container {
+            width: 100%;
+            max-width: 440px;
+        }
+
+        /* å¡ç‰‡ */
+        .login-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            padding: 40px 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+
+        .login-card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* å›¾æ ‡åŒºåŸŸ */
+        .logo-area {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.4);
+        }
+
+        .logo-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-top: 16px;
+            color: #1f2937;
+        }
+
+        .logo-subtitle {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 6px;
+        }
+
+        /* è¡¨å• */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            transition: all 0.2s;
+            outline: none;
+            background: #f9fafb;
+        }
+
+        .form-input:focus {
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        /* æŒ‰é’® */
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        /* æ¶ˆæ¯æç¤º */
+        .message {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            text-align: center;
+            display: none;
+        }
+
+        .message-error {
+            background: #fee2e2;
+            color: #dc2626;
+            border-left: 3px solid #dc2626;
+        }
+
+        .message-success {
+            background: #dcfce7;
+            color: #16a34a;
+            border-left: 3px solid #16a34a;
+        }
+
+        /* åº•éƒ¨é“¾æ¥ */
+        .footer-links {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 13px;
+            color: #9ca3af;
+        }
+
+        /* è£…é¥°å…ƒç´  */
+        .bg-decoration {
+            position: fixed;
+            z-index: -1;
+        }
+
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 32px 24px;
             }
-            if (result.success) {
-                window.location.href = 'index.html';
-            } else {
-                document.getElementById('loginMsg').innerText = result.msg || 'µÇÂ¼Ê§°Ü';
+            .logo-title {
+                font-size: 24px;
             }
         }
-    </script>
+    </style>
 </head>
 <body>
-    <h1 class="ht">WebTrackDB ÍøÂç¼à¿ØÃæ°å</h1>
-    <h3 class="ht">¹ÜÀíÔ±µÇÂ¼</h3>
+<div class="login-container">
+    <div class="login-card">
+        <div class="logo-area">
+            <div class="logo-icon">
+                ğŸŒ
+            </div>
+            <div class="logo-title">WebTrackDB</div>
+            <div class="logo-subtitle">ç½‘ç»œç›‘æ§ç³»ç»Ÿ Â· ç®¡ç†å‘˜ç™»å½•</div>
+        </div>
 
-    <form id="loginForm" method="post" action="/login" target="dataFrame">
-        <table class="tab" cellspacing="0px">
-            <tr class="ltr">
-                <td style="width:80px;">ÕËºÅ</td>
-                <td>
-                    <input class="ipt" type="text" id="usernameInput" name="username" placeholder="ÇëÊäÈëÕËºÅ">
-                </td>
-            </tr>
-            <tr class="ltr">
-                <td>ÃÜÂë</td>
-                <td>
-                    <input class="ipt" type="password" id="userPwdInput" name="password" placeholder="ÇëÊäÈëÃÜÂë">
-                </td>
-            </tr>
-            <tr class="ltr">
-                <td colspan="2" class="buttonContainer">
-                    <input class="btn1" type="button" value="µÇÂ¼" onclick="submitLogin()">
-                    <input class="btn1" type="reset" value="ÖØÖÃ">
-                </td>
-            </tr>
-            <tr class="ltr">
-                <td colspan="2" style="text-align:center;">
-                    <span class="msg" id="loginMsg"></span>
-                </td>
-            </tr>
-        </table>
-    </form>
+        <form id="loginForm" method="post" action="/login" target="dataFrame">
+            <div class="form-group">
+                <label class="form-label">è´¦å·</label>
+                <input type="text" class="form-input" id="usernameInput" name="username" placeholder="è¯·è¾“å…¥è´¦å·" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label class="form-label">å¯†ç </label>
+                <input type="password" class="form-input" id="userPwdInput" name="password" placeholder="è¯·è¾“å…¥å¯†ç ">
+            </div>
+            <button type="button" class="login-btn" onclick="submitLogin()">ç™» å½•</button>
+            <div id="loginMsg" class="message message-error"></div>
+        </form>
 
-    <iframe name="dataFrame" id="dataFrame" style="display:none;" onload="handleResult()"></iframe>
+        <div class="footer-links">
+             WebTrackDB | ç½‘ç»œè¡Œä¸ºç›‘æ§ç³»ç»Ÿ
+        </div>
+    </div>
+</div>
+
+<iframe name="dataFrame" id="dataFrame" style="display:none;" onload="handleResult()"></iframe>
+
+<script>
+    function submitLogin() {
+        var username = document.getElementById('usernameInput').value;
+        var password = document.getElementById('userPwdInput').value;
+        var msgDiv = document.getElementById('loginMsg');
+
+        if (!username.trim()) {
+            showMsg('è¯·è¾“å…¥è´¦å·', 'error');
+            return;
+        }
+        if (!password.trim()) {
+            showMsg('è¯·è¾“å…¥å¯†ç ', 'error');
+            return;
+        }
+
+        msgDiv.style.display = 'none';
+        document.getElementById('loginForm').submit();
+    }
+
+    function showMsg(msg, type) {
+        var msgDiv = document.getElementById('loginMsg');
+        msgDiv.innerText = msg;
+        msgDiv.className = 'message message-' + type;
+        msgDiv.style.display = 'block';
+    }
+
+    function handleResult() {
+        var frame = document.getElementById('dataFrame');
+        var doc = frame.contentDocument || frame.contentWindow.document;
+        var text = doc.body.textContent || doc.body.innerText || '';
+        if (!text.trim()) return;
+
+        try {
+            var result = JSON.parse(text);
+            if (result.success) {
+                showMsg('ç™»å½•æˆåŠŸï¼Œæ­£åœ¨è·³è½¬...', 'success');
+                setTimeout(function() {
+                    window.location.href = 'index.html';
+                }, 500);
+            } else {
+                showMsg(result.msg || 'è´¦å·æˆ–å¯†ç é”™è¯¯', 'error');
+            }
+        } catch(e) {
+            // å¦‚æœè¿”å›çš„ä¸æ˜¯ JSONï¼Œå¯èƒ½æ˜¯ HTML é¡µé¢ï¼Œå°è¯•ç›´æ¥è·³è½¬
+            if (text.indexOf('index') !== -1 || text.indexOf('ç™»å½•æˆåŠŸ') !== -1) {
+                window.location.href = 'index.html';
+            } else {
+                showMsg('ç™»å½•å¤±è´¥ï¼Œè¯·é‡è¯•', 'error');
+            }
+        }
+    }
+</script>
 </body>
 </html>
