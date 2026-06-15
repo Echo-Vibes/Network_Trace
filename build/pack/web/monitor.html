@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>系统性能 - WebTrackDB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/modern.css">
+    <style>
+        .metric-card {
+            background: white;
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+        .metric-label {
+            font-size: 14px;
+            color: var(--gray);
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: var(--border);
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        .network-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .network-item:last-child {
+            border-bottom: none;
+        }
+        .network-name {
+            font-weight: 500;
+            color: var(--dark);
+        }
+        .network-speed {
+            display: flex;
+            gap: 16px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .speed-down { color: var(--primary); }
+        .speed-up { color: var(--secondary); }
+        .refresh-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--secondary);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+            margin-left: 8px;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="nav-bar">
+        <span class="nav-logo">🌐 WebTrackDB</span>
+        <div class="nav-links">
+            <a href="index.html" style="color: var(--gray); text-decoration: none;">← 返回首页</a>
+            <span style="font-size: 13px; color: var(--gray);">
+                    自动刷新 <span id="refreshStatus">●</span>
+                </span>
+        </div>
+    </div>
+
+    <h1 class="page-title">系统性能监控</h1>
+    <p class="page-subtitle">实时 CPU、内存、网络流量监控数据</p>
+
+    <!-- CPU & 内存 双卡片 -->
+    <div class="grid-2" style="margin-bottom: 24px;">
+        <!-- CPU 卡片 -->
+        <div class="metric-card">
+            <div class="metric-label">
+                <span>🖥️ CPU 使用率</span>
+                <span id="cpuVal" class="metric-value" style="font-size: 20px;">--%</span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="cpuFill" style="width: 0%;"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 内存卡片 -->
+        <div class="metric-card">
+            <div class="metric-label">
+                <span>💾 内存使用率</span>
+                <span id="memVal" class="metric-value" style="font-size: 20px;">--%</span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="memFill" style="width: 0%;"></div>
+                </div>
+            </div>
+            <div style="margin-top: 12px; font-size: 12px; color: var(--gray);">
+                已用: <span id="memUsed">--</span> / 总计: <span id="memTotal">--</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 网络流量卡片 -->
+    <div class="card">
+        <div class="card-title">📡 网络流量监控</div>
+        <div id="netBody">
+            <div style="text-align:center; color:var(--gray); padding: 20px;">正在检测网络接口...</div>
+        </div>
+    </div>
+
+    <!-- 状态信息 -->
+    <div id="statusMsg" style="text-align: center; margin-top: 16px; font-size: 13px; color: var(--gray);"></div>
+</div>
+
+<script>
+    var refreshTimer = null;
+
+    function startMonitor() {
+        fetchData();
+        if (refreshTimer) clearInterval(refreshTimer);
+        refreshTimer = setInterval(fetchData, 2000);
+    }
+
+    function fetchData() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/monitor', true);
+        xhr.timeout = 5000;
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                    renderData(data);
+                    document.getElementById('statusMsg').innerHTML = '✅ 实时监控中 <span class="refresh-indicator"></span>';
+                } catch (e) {
+                    handleError();
+                }
+            } else {
+                handleError();
+            }
+        };
+        xhr.onerror = handleError;
+        xhr.ontimeout = handleError;
+        xhr.send();
+    }
+
+    function handleError() {
+        document.getElementById('statusMsg').innerHTML = '⚠️ 连接失败，正在重试...';
+        document.getElementById('refreshStatus').innerHTML = '🔴';
+    }
+
+    function renderData(data) {
+        if (data.error) {
+            if (data.error.includes('login')) window.location.href = 'login.html';
+            document.getElementById('statusMsg').innerHTML = '❌ ' + data.error;
+            return;
+        }
+        renderCpu(data.cpu);
+        renderMemory(data.memory);
+        renderNetwork(data.network);
+        document.getElementById('refreshStatus').innerHTML = '🟢';
+    }
+
+    function renderCpu(cpu) {
+        var pct = cpu.percent;
+        var fill = document.getElementById('cpuFill');
+        var val = document.getElementById('cpuVal');
+        var cores = document.getElementById('cpuCores');
+
+        if (cpu.cores) cores.innerText = cpu.cores;
+
+        if (pct < 0 || pct === undefined) {
+            fill.style.width = '0%';
+            fill.style.background = '#e2e8f0';
+            val.innerText = '--%';
+            return;
+        }
+
+        fill.style.width = Math.min(pct, 100) + '%';
+        if (pct < 50) fill.style.background = '#10b981';
+        else if (pct < 80) fill.style.background = '#f59e0b';
+        else fill.style.background = '#ef4444';
+        val.innerText = pct.toFixed(1) + '%';
+    }
+
+    function renderMemory(mem) {
+        var fill = document.getElementById('memFill');
+        var val = document.getElementById('memVal');
+        var usedSpan = document.getElementById('memUsed');
+        var totalSpan = document.getElementById('memTotal');
+
+        if (mem.percent < 0 || mem.percent === undefined) {
+            fill.style.width = '0%';
+            fill.style.background = '#e2e8f0';
+            val.innerText = '--%';
+            usedSpan.innerText = '--';
+            totalSpan.innerText = '--';
+            return;
+        }
+
+        fill.style.width = Math.min(mem.percent, 100) + '%';
+        if (mem.percent < 50) fill.style.background = '#10b981';
+        else if (mem.percent < 80) fill.style.background = '#f59e0b';
+        else fill.style.background = '#ef4444';
+        val.innerText = mem.percent.toFixed(1) + '%';
+        usedSpan.innerText = formatSize(mem.used);
+        totalSpan.innerText = formatSize(mem.total);
+    }
+
+    function renderNetwork(nets) {
+        var container = document.getElementById('netBody');
+        if (!nets || nets.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:var(--gray); padding: 20px;">未检测到活动网络接口</div>';
+            return;
+        }
+
+        var html = '';
+        for (var i = 0; i < nets.length; i++) {
+            var net = nets[i];
+            html += '<div class="network-item">' +
+                '<span class="network-name">' + escapeHtml(net.name) + '</span>' +
+                '<div class="network-speed">' +
+                '<span class="speed-down">📥 ' + formatBps(net.downloadBps) + '</span>' +
+                '<span class="speed-up">📤 ' + formatBps(net.uploadBps) + '</span>' +
+                '</div></div>';
+        }
+        container.innerHTML = html;
+    }
+
+    function formatSize(bytes) {
+        if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(2) + ' GB';
+        if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
+        if (bytes >= 1024) return (bytes / 1024).toFixed(0) + ' KB';
+        return bytes + ' B';
+    }
+
+    function formatBps(bps) {
+        if (bps >= 1048576) return (bps / 1048576).toFixed(2) + ' MB/s';
+        if (bps >= 1024) return (bps / 1024).toFixed(1) + ' KB/s';
+        return bps + ' B/s';
+    }
+
+    function escapeHtml(s) {
+        if (!s) return '';
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    window.onload = startMonitor;
+    window.onbeforeunload = function() {
+        if (refreshTimer) clearInterval(refreshTimer);
+    };
+</script>
+</body>
+</html>

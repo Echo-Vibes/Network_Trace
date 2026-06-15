@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>WebTrackDB - 登录</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* 主容器 - 毛玻璃效果 */
+        .login-container {
+            width: 100%;
+            max-width: 440px;
+        }
+
+        /* 卡片 */
+        .login-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            padding: 40px 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+
+        .login-card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* 图标区域 */
+        .logo-area {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.4);
+        }
+
+        .logo-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-top: 16px;
+            color: #1f2937;
+        }
+
+        .logo-subtitle {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 6px;
+        }
+
+        /* 表单 */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            transition: all 0.2s;
+            outline: none;
+            background: #f9fafb;
+        }
+
+        .form-input:focus {
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        /* 按钮 */
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        /* 消息提示 */
+        .message {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            text-align: center;
+            display: none;
+        }
+
+        .message-error {
+            background: #fee2e2;
+            color: #dc2626;
+            border-left: 3px solid #dc2626;
+        }
+
+        .message-success {
+            background: #dcfce7;
+            color: #16a34a;
+            border-left: 3px solid #16a34a;
+        }
+
+        /* 底部链接 */
+        .footer-links {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 13px;
+            color: #9ca3af;
+        }
+
+        /* 装饰元素 */
+        .bg-decoration {
+            position: fixed;
+            z-index: -1;
+        }
+
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 32px 24px;
+            }
+            .logo-title {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="login-container">
+    <div class="login-card">
+        <div class="logo-area">
+            <div class="logo-icon">
+                🌐
+            </div>
+            <div class="logo-title">WebTrackDB</div>
+            <div class="logo-subtitle">网络监控系统 · 管理员登录</div>
+        </div>
+
+        <form id="loginForm" method="post" action="/login" target="dataFrame">
+            <div class="form-group">
+                <label class="form-label">账号</label>
+                <input type="text" class="form-input" id="usernameInput" name="username" placeholder="请输入账号" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label class="form-label">密码</label>
+                <input type="password" class="form-input" id="userPwdInput" name="password" placeholder="请输入密码">
+            </div>
+            <button type="button" class="login-btn" onclick="submitLogin()">登 录</button>
+            <div id="loginMsg" class="message message-error"></div>
+        </form>
+
+        <div class="footer-links">
+             WebTrackDB | 网络行为监控系统
+        </div>
+    </div>
+</div>
+
+<iframe name="dataFrame" id="dataFrame" style="display:none;" onload="handleResult()"></iframe>
+
+<script>
+    function submitLogin() {
+        var username = document.getElementById('usernameInput').value;
+        var password = document.getElementById('userPwdInput').value;
+        var msgDiv = document.getElementById('loginMsg');
+
+        if (!username.trim()) {
+            showMsg('请输入账号', 'error');
+            return;
+        }
+        if (!password.trim()) {
+            showMsg('请输入密码', 'error');
+            return;
+        }
+
+        msgDiv.style.display = 'none';
+        document.getElementById('loginForm').submit();
+    }
+
+    function showMsg(msg, type) {
+        var msgDiv = document.getElementById('loginMsg');
+        msgDiv.innerText = msg;
+        msgDiv.className = 'message message-' + type;
+        msgDiv.style.display = 'block';
+    }
+
+    function handleResult() {
+        var frame = document.getElementById('dataFrame');
+        var doc = frame.contentDocument || frame.contentWindow.document;
+        var text = doc.body.textContent || doc.body.innerText || '';
+        if (!text.trim()) return;
+
+        try {
+            var result = JSON.parse(text);
+            if (result.success) {
+                showMsg('登录成功，正在跳转...', 'success');
+                setTimeout(function() {
+                    window.location.href = 'index.html';
+                }, 500);
+            } else {
+                showMsg(result.msg || '账号或密码错误', 'error');
+            }
+        } catch(e) {
+            // 如果返回的不是 JSON，可能是 HTML 页面，尝试直接跳转
+            if (text.indexOf('index') !== -1 || text.indexOf('登录成功') !== -1) {
+                window.location.href = 'index.html';
+            } else {
+                showMsg('登录失败，请重试', 'error');
+            }
+        }
+    }
+</script>
+</body>
+</html>

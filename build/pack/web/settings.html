@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>账号设置 - WebTrackDB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/modern.css">
+</head>
+<body>
+<div class="container" style="max-width: 600px;">
+    <div class="nav-bar">
+        <span class="nav-logo">🌐 WebTrackDB</span>
+        <div class="nav-links">
+            <a href="index.html" style="color: var(--gray); text-decoration: none;">← 返回首页</a>
+        </div>
+    </div>
+
+    <h1 class="page-title">账号设置</h1>
+    <p class="page-subtitle">修改管理员账号信息</p>
+
+    <!-- 修改用户名 -->
+    <div class="card">
+        <div class="card-title">👤 修改用户名</div>
+        <form id="usernameForm" method="post" action="/settings?type=username" target="usernameFrame">
+            <div class="input-group">
+                <label class="input-label">新用户名</label>
+                <input type="text" class="input-field" id="newUsernameInput" name="newUsername" placeholder="输入新用户名">
+            </div>
+            <button type="button" class="btn btn-primary" onclick="submitUsername()">修改用户名</button>
+            <div id="usernameMsg" class="message" style="display: none; margin-top: 16px;"></div>
+        </form>
+    </div>
+
+    <!-- 修改密码 -->
+    <div class="card">
+        <div class="card-title">🔒 修改密码</div>
+        <form id="passwordForm" method="post" action="/settings?type=password" target="dataFrame">
+            <div class="input-group">
+                <label class="input-label">旧密码</label>
+                <input type="password" class="input-field" id="oldPwdInput" name="oldPassword" placeholder="输入旧密码">
+            </div>
+            <div class="input-group">
+                <label class="input-label">新密码</label>
+                <input type="password" class="input-field" id="newPwdInput" name="newPassword" placeholder="输入新密码（至少6位）">
+            </div>
+            <div class="input-group">
+                <label class="input-label">确认新密码</label>
+                <input type="password" class="input-field" id="confirmPwdInput" placeholder="再次输入新密码">
+            </div>
+            <button type="button" class="btn btn-primary" onclick="submitPassword()">修改密码</button>
+            <div id="pwdMsg" class="message" style="display: none; margin-top: 16px;"></div>
+        </form>
+    </div>
+</div>
+
+<iframe name="usernameFrame" id="usernameFrame" style="display:none;" onload="handleUsernameFrame()"></iframe>
+<iframe name="dataFrame" id="dataFrame" style="display:none;" onload="handleFrame()"></iframe>
+
+<script>
+    function showMessage(element, msg, isSuccess) {
+        element.innerText = msg;
+        element.className = 'message message-' + (isSuccess ? 'success' : 'error');
+        element.style.display = 'block';
+        if (isSuccess) {
+            setTimeout(function() {
+                element.style.display = 'none';
+            }, 3000);
+        }
+    }
+
+    // 修改用户名
+    function submitUsername() {
+        var newUsername = document.getElementById('newUsernameInput').value;
+        var msgSpan = document.getElementById('usernameMsg');
+        if (!newUsername.trim()) {
+            showMessage(msgSpan, '用户名不能为空', false);
+            return false;
+        }
+        if (newUsername.length < 3) {
+            showMessage(msgSpan, '用户名至少3个字符', false);
+            return false;
+        }
+        msgSpan.style.display = 'none';
+        document.getElementById('usernameForm').submit();
+        return false;
+    }
+
+    // 修改密码
+    function submitPassword() {
+        var oldPwd = document.getElementById('oldPwdInput').value;
+        var newPwd = document.getElementById('newPwdInput').value;
+        var confirmPwd = document.getElementById('confirmPwdInput').value;
+        var msgSpan = document.getElementById('pwdMsg');
+
+        if (!oldPwd.trim()) {
+            showMessage(msgSpan, '请输入旧密码', false);
+            return false;
+        }
+        if (!newPwd.trim()) {
+            showMessage(msgSpan, '新密码不能为空', false);
+            return false;
+        }
+        if (newPwd.length < 6) {
+            showMessage(msgSpan, '新密码至少6个字符', false);
+            return false;
+        }
+        if (newPwd !== confirmPwd) {
+            showMessage(msgSpan, '两次输入的新密码不一致', false);
+            return false;
+        }
+        msgSpan.style.display = 'none';
+        document.getElementById('passwordForm').submit();
+        return false;
+    }
+
+    // 处理密码修改返回
+    function handleFrame() {
+        var frame = document.getElementById('dataFrame');
+        var doc = frame.contentDocument || frame.contentWindow.document;
+        var text = doc.body.textContent || doc.body.innerText || '';
+        if (!text.trim()) return;
+        try {
+            var result = JSON.parse(text);
+            var msg = result.msg || '';
+            var msgSpan = document.getElementById('pwdMsg');
+            var isSuccess = msg.indexOf('成功') !== -1;
+            showMessage(msgSpan, msg, isSuccess);
+            if (isSuccess) {
+                document.getElementById('oldPwdInput').value = '';
+                document.getElementById('newPwdInput').value = '';
+                document.getElementById('confirmPwdInput').value = '';
+            }
+        } catch(e) {}
+    }
+
+    // 处理用户名修改返回
+    function handleUsernameFrame() {
+        var frame = document.getElementById('usernameFrame');
+        var doc = frame.contentDocument || frame.contentWindow.document;
+        var text = doc.body.textContent || doc.body.innerText || '';
+        if (!text.trim()) return;
+        try {
+            var result = JSON.parse(text);
+            var msg = result.msg || '';
+            var msgSpan = document.getElementById('usernameMsg');
+            var isSuccess = msg.indexOf('成功') !== -1;
+            showMessage(msgSpan, msg, isSuccess);
+            if (isSuccess) {
+                document.getElementById('newUsernameInput').value = '';
+            }
+        } catch(e) {}
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>黑名单管理 - WebTrackDB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/modern.css">
+    <style>
+        .url-display {
+            font-family: monospace;
+            font-size: 13px;
+            background: var(--light);
+            padding: 2px 8px;
+            border-radius: 4px;
+            word-break: break-all;
+        }
+        .delete-btn {
+            color: var(--danger);
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        .delete-btn:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="nav-bar">
+        <span class="nav-logo">🌐 WebTrackDB</span>
+        <div class="nav-links">
+            <a href="index.html" style="color: var(--gray); text-decoration: none;">← 返回首页</a>
+        </div>
+    </div>
+
+    <h1 class="page-title">黑名单管理</h1>
+    <p class="page-subtitle">添加需要拦截的 URL，访问这些地址将被阻止</p>
+
+    <!-- 添加表单 -->
+    <div class="card">
+        <div class="card-title">➕ 添加黑名单规则</div>
+        <form id="addForm" method="post" action="/blacklist" target="dataFrame">
+            <div style="display: flex; gap: 12px; align-items: flex-end;">
+                <div style="flex: 1;">
+                    <label class="input-label">URL 地址</label>
+                    <input type="text" class="input-field" id="blacklistUrl" name="url" placeholder="例如：https://example.com 或 example.com">
+                </div>
+                <div>
+                    <button type="button" class="btn btn-primary" onclick="submitAdd()">添加规则</button>
+                </div>
+            </div>
+            <div id="urlMsg" class="message message-error" style="display: none; margin-top: 12px;"></div>
+        </form>
+    </div>
+
+    <!-- 黑名单列表 -->
+    <div class="card">
+        <div class="card-title">📋 当前黑名单 (共 <span id="countSpan">0</span> 条)</div>
+        <table class="modern-table">
+            <thead>
+            <tr><th style="width: 60px;">ID</th><th>URL</th><th style="width: 160px;">添加时间</th><th style="width: 80px;">操作</th></tr>
+            </thead>
+            <tbody id="tableBody">
+            <tr><td colspan="4" style="text-align:center; color:var(--gray);">加载中...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 隐藏 iframe 用于后端通信 -->
+<form id="loadForm" method="get" action="/blacklist" target="dataFrame" style="display:none;"></form>
+<iframe name="dataFrame" id="dataFrame" style="display:none;" onload="renderData()"></iframe>
+
+<script>
+    // 页面加载时获取数据
+    window.onload = function() {
+        document.getElementById('loadForm').submit();
+    };
+
+    function renderData() {
+        var frame = document.getElementById('dataFrame');
+        var doc = frame.contentDocument || frame.contentWindow.document;
+        var text = doc.body.textContent || doc.body.innerText || '';
+        if (!text.trim()) return;
+
+        var data;
+        try {
+            data = JSON.parse(text);
+        } catch(e) { return; }
+
+        var list = data.list || [];
+        var msg = data.msg || '';
+
+        // 显示消息
+        var msgSpan = document.getElementById('urlMsg');
+        if (msg) {
+            showMsg(msg, msg.indexOf('成功') !== -1 ? 'success' : 'error');
+        }
+
+        // 更新计数
+        document.getElementById('countSpan').innerText = list.length;
+
+        // 渲染表格
+        var tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        if (list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--gray);">暂无黑名单记录</td></tr>';
+            return;
+        }
+
+        for (var i = 0; i < list.length; i++) {
+            var row = list[i];
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td>' + row.id + '</td>' +
+                '<td><span class="url-display">' + escapeHtml(row.url) + '</span></td>' +
+                '<td>' + escapeHtml(row.addTime) + '</td>' +
+                '<td><a href="#" class="delete-btn" onclick="deleteItem(' + row.id + '); return false;">🗑️ 删除</a></td>';
+            tbody.appendChild(tr);
+        }
+
+        // 清空输入框
+        document.getElementById('blacklistUrl').value = '';
+    }
+
+    function deleteItem(id) {
+        if (confirm('确定要删除这条黑名单规则吗？')) {
+            // 创建临时表单提交删除请求
+            var frame = document.getElementById('dataFrame');
+            frame.onload = function() {
+                frame.onload = renderData;
+                renderData();
+            };
+            window.location.href = '/blacklist?delete=' + id;
+        }
+    }
+
+    function showMsg(msg, type) {
+        var msgDiv = document.getElementById('urlMsg');
+        msgDiv.innerText = msg;
+        msgDiv.className = 'message message-' + (type === 'success' ? 'success' : 'error');
+        msgDiv.style.display = 'block';
+        setTimeout(function() {
+            msgDiv.style.display = 'none';
+        }, 3000);
+    }
+
+    function checkUrl() {
+        var url = document.getElementById('blacklistUrl').value;
+        if (!url.trim()) {
+            showMsg('URL 不能为空', 'error');
+            return false;
+        }
+        if (url.indexOf('.') === -1 && !url.includes('localhost')) {
+            showMsg('URL 格式无效（需包含 . 或为 localhost）', 'error');
+            return false;
+        }
+        return true;
+    }
+
+    function submitAdd() {
+        if (!checkUrl()) return false;
+        document.getElementById('addForm').submit();
+        return false;
+    }
+
+    function escapeHtml(s) {
+        if (!s) return '';
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+</script>
+</body>
+</html>

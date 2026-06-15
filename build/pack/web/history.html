@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>访问历史 - WebTrackDB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/modern.css">
+</head>
+<body>
+<div class="container">
+    <div class="nav-bar">
+        <span class="nav-logo">🌐 WebTrackDB</span>
+        <div class="nav-links">
+            <a href="index.html" style="color: var(--gray); text-decoration: none;">← 返回首页</a>
+        </div>
+    </div>
+
+    <h1 class="page-title">访问历史记录</h1>
+    <p class="page-subtitle">按用户名或 URL 关键字筛选</p>
+
+    <div class="card">
+        <form id="searchForm" method="post" action="/history" target="dataFrame">
+            <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end;">
+                <div style="flex: 1;">
+                    <label class="input-label">用户名</label>
+                    <input type="text" class="input-field" name="userName" placeholder="输入用户名筛选">
+                </div>
+                <div style="flex: 1;">
+                    <label class="input-label">URL 关键字</label>
+                    <input type="text" class="input-field" name="urlKeyword" placeholder="输入URL关键字">
+                </div>
+                <div>
+                    <button type="submit" class="btn btn-primary">🔍 查询</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <table class="modern-table">
+            <thead>
+            <tr><th>ID</th><th>用户名</th><th>URL</th><th>访问时间</th></tr>
+            </thead>
+            <tbody id="tableBody">
+            <tr><td colspan="4" style="text-align:center; color:var(--gray);">加载中...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<iframe name="dataFrame" id="dataFrame" style="display:none;" onload="renderData()"></iframe>
+
+<script>
+    // 自动加载数据
+    document.getElementById('searchForm').submit();
+
+    function renderData() {
+        var frame = document.getElementById('dataFrame');
+        var doc = frame.contentDocument || frame.contentWindow.document;
+        var text = doc.body.textContent || doc.body.innerText || '';
+        if (!text.trim()) return;
+        try {
+            var list = JSON.parse(text);
+            var tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            if (list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--gray);">暂无访问记录</td></tr>';
+                return;
+            }
+            for (var i = 0; i < list.length; i++) {
+                var row = list[i];
+                tbody.innerHTML += '<tr><td>' + row.id + '</td><td>' + escapeHtml(row.userName) + '</td><td style="word-break:break-all;">' + escapeHtml(row.url) + '</td><td>' + escapeHtml(row.visitTime) + '</td></tr>';
+            }
+        } catch(e) {}
+    }
+
+    function escapeHtml(s) {
+        if (!s) return '';
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+</script>
+</body>
+</html>
