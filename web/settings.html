@@ -1,182 +1,155 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="GBK">
-    <title>ĞŞ¸ÄÕËºÅ - WebTrackDB</title>
-    <style>
-        .ht { text-align: center; color: cadetblue; font-family: Ó×Ô²; }
-        .tab { width: 500px; border: 5px solid cadetblue; margin: 0px auto; border-radius: 5px; font-family: Ó×Ô²; }
-        .ltr td { border: 1px solid powderblue; padding: 8px 12px; }
-        .ipt { border: 1px solid powderblue; width: 200px; padding: 4px 6px; }
-        .btn1 { border: 2px solid powderblue; border-radius: 4px; width: 100px; background-color: antiquewhite; font-family: Ó×Ô²; cursor: pointer; padding: 4px 0; }
-        .buttonContainer { text-align: center; }
-        a { color: cadetblue; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-        .msg { color: rgb(230,87,51); font-family: Ó×Ô²; font-size: 13px; }
-        .ok { color: green; font-family: Ó×Ô²; font-size: 13px; }
-    </style>
-    <script>
-        function submitUsername() {
-            var newUsername = document.getElementById('newUsernameInput').value;
-            var msgSpan = document.getElementById('usernameMsg');
-            if (!newUsername.trim()) {
-                msgSpan.innerText = 'ÓÃ»§Ãû²»ÄÜÎª¿Õ';
-                msgSpan.className = 'msg';
-                return false;
-            }
-            msgSpan.innerText = '';
-            document.getElementById('usernameForm').submit();
+    <meta charset="UTF-8">
+    <title>è´¦å·è®¾ç½® - WebTrackDB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/modern.css">
+</head>
+<body>
+<div class="container" style="max-width: 600px;">
+    <div class="nav-bar">
+        <span class="nav-logo">ğŸŒ WebTrackDB</span>
+        <div class="nav-links">
+            <a href="index.html" style="color: var(--gray); text-decoration: none;">â† è¿”å›é¦–é¡µ</a>
+        </div>
+    </div>
+
+    <h1 class="page-title">è´¦å·è®¾ç½®</h1>
+    <p class="page-subtitle">ä¿®æ”¹ç®¡ç†å‘˜è´¦å·ä¿¡æ¯</p>
+
+    <!-- ä¿®æ”¹ç”¨æˆ·å -->
+    <div class="card">
+        <div class="card-title">ğŸ‘¤ ä¿®æ”¹ç”¨æˆ·å</div>
+        <form id="usernameForm" method="post" action="/settings?type=username" target="usernameFrame">
+            <div class="input-group">
+                <label class="input-label">æ–°ç”¨æˆ·å</label>
+                <input type="text" class="input-field" id="newUsernameInput" name="newUsername" placeholder="è¾“å…¥æ–°ç”¨æˆ·å">
+            </div>
+            <button type="button" class="btn btn-primary" onclick="submitUsername()">ä¿®æ”¹ç”¨æˆ·å</button>
+            <div id="usernameMsg" class="message" style="display: none; margin-top: 16px;"></div>
+        </form>
+    </div>
+
+    <!-- ä¿®æ”¹å¯†ç  -->
+    <div class="card">
+        <div class="card-title">ğŸ”’ ä¿®æ”¹å¯†ç </div>
+        <form id="passwordForm" method="post" action="/settings?type=password" target="dataFrame">
+            <div class="input-group">
+                <label class="input-label">æ—§å¯†ç </label>
+                <input type="password" class="input-field" id="oldPwdInput" name="oldPassword" placeholder="è¾“å…¥æ—§å¯†ç ">
+            </div>
+            <div class="input-group">
+                <label class="input-label">æ–°å¯†ç </label>
+                <input type="password" class="input-field" id="newPwdInput" name="newPassword" placeholder="è¾“å…¥æ–°å¯†ç ï¼ˆè‡³å°‘6ä½ï¼‰">
+            </div>
+            <div class="input-group">
+                <label class="input-label">ç¡®è®¤æ–°å¯†ç </label>
+                <input type="password" class="input-field" id="confirmPwdInput" placeholder="å†æ¬¡è¾“å…¥æ–°å¯†ç ">
+            </div>
+            <button type="button" class="btn btn-primary" onclick="submitPassword()">ä¿®æ”¹å¯†ç </button>
+            <div id="pwdMsg" class="message" style="display: none; margin-top: 16px;"></div>
+        </form>
+    </div>
+</div>
+
+<iframe name="usernameFrame" id="usernameFrame" style="display:none;" onload="handleUsernameFrame()"></iframe>
+<iframe name="dataFrame" id="dataFrame" style="display:none;" onload="handleFrame()"></iframe>
+
+<script>
+    function showMessage(element, msg, isSuccess) {
+        element.innerText = msg;
+        element.className = 'message message-' + (isSuccess ? 'success' : 'error');
+        element.style.display = 'block';
+        if (isSuccess) {
+            setTimeout(function() {
+                element.style.display = 'none';
+            }, 3000);
+        }
+    }
+
+    // ä¿®æ”¹ç”¨æˆ·å
+    function submitUsername() {
+        var newUsername = document.getElementById('newUsernameInput').value;
+        var msgSpan = document.getElementById('usernameMsg');
+        if (!newUsername.trim()) {
+            showMessage(msgSpan, 'ç”¨æˆ·åä¸èƒ½ä¸ºç©º', false);
             return false;
         }
-
-        function submitPassword() {
-            var oldPwd = document.getElementById('oldPwdInput').value;
-            var newPwd = document.getElementById('newPwdInput').value;
-            var confirmPwd = document.getElementById('confirmPwdInput').value;
-            var msgSpan = document.getElementById('pwdMsg');
-            if (!oldPwd.trim()) {
-                msgSpan.innerText = 'ÇëÊäÈë¾ÉÃÜÂë';
-                msgSpan.className = 'msg';
-                return false;
-            }
-            if (!newPwd.trim()) {
-                msgSpan.innerText = 'ĞÂÃÜÂë²»ÄÜÎª¿Õ';
-                msgSpan.className = 'msg';
-                return false;
-            }
-            if (newPwd !== confirmPwd) {
-                msgSpan.innerText = 'Á½´ÎÊäÈëµÄĞÂÃÜÂë²»Ò»ÖÂ';
-                msgSpan.className = 'msg';
-                return false;
-            }
-            msgSpan.innerText = '';
-            document.getElementById('passwordForm').submit();
+        if (newUsername.length < 3) {
+            showMessage(msgSpan, 'ç”¨æˆ·åè‡³å°‘3ä¸ªå­—ç¬¦', false);
             return false;
         }
+        msgSpan.style.display = 'none';
+        document.getElementById('usernameForm').submit();
+        return false;
+    }
 
-        function handleFrame() {
-            var frame = document.getElementById('dataFrame');
-            var doc = frame.contentDocument || frame.contentWindow.document;
-            var text = doc.body.textContent || doc.body.innerText || '';
-            if (!text.trim()) return;
-            try {
-                var result = JSON.parse(text);
-            } catch (e) {
-                return;
-            }
+    // ä¿®æ”¹å¯†ç 
+    function submitPassword() {
+        var oldPwd = document.getElementById('oldPwdInput').value;
+        var newPwd = document.getElementById('newPwdInput').value;
+        var confirmPwd = document.getElementById('confirmPwdInput').value;
+        var msgSpan = document.getElementById('pwdMsg');
+
+        if (!oldPwd.trim()) {
+            showMessage(msgSpan, 'è¯·è¾“å…¥æ—§å¯†ç ', false);
+            return false;
+        }
+        if (!newPwd.trim()) {
+            showMessage(msgSpan, 'æ–°å¯†ç ä¸èƒ½ä¸ºç©º', false);
+            return false;
+        }
+        if (newPwd.length < 6) {
+            showMessage(msgSpan, 'æ–°å¯†ç è‡³å°‘6ä¸ªå­—ç¬¦', false);
+            return false;
+        }
+        if (newPwd !== confirmPwd) {
+            showMessage(msgSpan, 'ä¸¤æ¬¡è¾“å…¥çš„æ–°å¯†ç ä¸ä¸€è‡´', false);
+            return false;
+        }
+        msgSpan.style.display = 'none';
+        document.getElementById('passwordForm').submit();
+        return false;
+    }
+
+    // å¤„ç†å¯†ç ä¿®æ”¹è¿”å›
+    function handleFrame() {
+        var frame = document.getElementById('dataFrame');
+        var doc = frame.contentDocument || frame.contentWindow.document;
+        var text = doc.body.textContent || doc.body.innerText || '';
+        if (!text.trim()) return;
+        try {
+            var result = JSON.parse(text);
             var msg = result.msg || '';
-            if (msg.indexOf('³É¹¦') !== -1) {
-                document.getElementById('usernameMsg').innerText = '';
-                document.getElementById('pwdMsg').innerText = msg;
-                document.getElementById('pwdMsg').className = 'ok';
-                document.getElementById('usernameMsg').className = 'ok';
-                // Çå¿ÕÃÜÂëÊäÈë¿ò
+            var msgSpan = document.getElementById('pwdMsg');
+            var isSuccess = msg.indexOf('æˆåŠŸ') !== -1;
+            showMessage(msgSpan, msg, isSuccess);
+            if (isSuccess) {
                 document.getElementById('oldPwdInput').value = '';
                 document.getElementById('newPwdInput').value = '';
                 document.getElementById('confirmPwdInput').value = '';
-            } else if (msg) {
-                document.getElementById('pwdMsg').innerText = msg;
-                document.getElementById('pwdMsg').className = 'msg';
             }
-        }
+        } catch(e) {}
+    }
 
-        // µ¥¶À´¦ÀíÓÃ»§ÃûĞŞ¸ÄµÄ·µ»Ø
-        function handleUsernameFrame() {
-            var frame = document.getElementById('usernameFrame');
-            var doc = frame.contentDocument || frame.contentWindow.document;
-            var text = doc.body.textContent || doc.body.innerText || '';
-            if (!text.trim()) return;
-            try {
-                var result = JSON.parse(text);
-            } catch (e) {
-                return;
-            }
+    // å¤„ç†ç”¨æˆ·åä¿®æ”¹è¿”å›
+    function handleUsernameFrame() {
+        var frame = document.getElementById('usernameFrame');
+        var doc = frame.contentDocument || frame.contentWindow.document;
+        var text = doc.body.textContent || doc.body.innerText || '';
+        if (!text.trim()) return;
+        try {
+            var result = JSON.parse(text);
             var msg = result.msg || '';
             var msgSpan = document.getElementById('usernameMsg');
-            msgSpan.innerText = msg;
-            msgSpan.className = msg.indexOf('³É¹¦') !== -1 ? 'ok' : 'msg';
-            if (msg.indexOf('³É¹¦') !== -1) {
+            var isSuccess = msg.indexOf('æˆåŠŸ') !== -1;
+            showMessage(msgSpan, msg, isSuccess);
+            if (isSuccess) {
                 document.getElementById('newUsernameInput').value = '';
             }
-        }
-    </script>
-</head>
-<body>
-    <h1 class="ht">ĞŞ¸Ä¹ÜÀíÔ±ÕËºÅ</h1>
-    <h3 class="ht"><a href="index.html">·µ»ØÊ×Ò³</a></h3>
-
-    <!-- ĞŞ¸ÄÓÃ»§Ãû -->
-    <form id="usernameForm" method="post" action="/settings?type=username" target="usernameFrame">
-        <table class="tab" cellspacing="0px">
-            <tr class="ltr">
-                <th colspan="2" style="background-color:powderblue;">ĞŞ¸ÄÓÃ»§Ãû</th>
-            </tr>
-            <tr class="ltr">
-                <td style="width:100px;">ĞÂÓÃ»§Ãû</td>
-                <td>
-                    <input class="ipt" type="text" id="newUsernameInput" name="newUsername" placeholder="ÊäÈëĞÂÓÃ»§Ãû">
-                </td>
-            </tr>
-            <tr class="ltr">
-                <td colspan="2" class="buttonContainer">
-                    <input class="btn1" type="button" value="ĞŞ¸ÄÓÃ»§Ãû" onclick="submitUsername()">
-                </td>
-            </tr>
-            <tr class="ltr">
-                <td colspan="2" style="text-align:center;">
-                    <span id="usernameMsg"></span>
-                </td>
-            </tr>
-        </table>
-    </form>
-
-    <br/>
-
-    <!-- ĞŞ¸ÄÃÜÂë -->
-    <form id="passwordForm" method="post" action="/settings?type=password" target="dataFrame">
-        <table class="tab" cellspacing="0px">
-            <tr class="ltr">
-                <th colspan="2" style="background-color:powderblue;">ĞŞ¸ÄÃÜÂë</th>
-            </tr>
-            <tr class="ltr">
-                <td style="width:100px;">¾ÉÃÜÂë</td>
-                <td>
-                    <input class="ipt" type="password" id="oldPwdInput" name="oldPassword" placeholder="ÊäÈë¾ÉÃÜÂë">
-                </td>
-            </tr>
-            <tr class="ltr">
-                <td>ĞÂÃÜÂë</td>
-                <td>
-                    <input class="ipt" type="password" id="newPwdInput" name="newPassword" placeholder="ÊäÈëĞÂÃÜÂë">
-                </td>
-            </tr>
-            <tr class="ltr">
-                <td>È·ÈÏĞÂÃÜÂë</td>
-                <td>
-                    <input class="ipt" type="password" id="confirmPwdInput" placeholder="ÔÙ´ÎÊäÈëĞÂÃÜÂë">
-                </td>
-            </tr>
-            <tr class="ltr">
-                <td colspan="2" class="buttonContainer">
-                    <input class="btn1" type="button" value="ĞŞ¸ÄÃÜÂë" onclick="submitPassword()">
-                </td>
-            </tr>
-            <tr class="ltr">
-                <td colspan="2" style="text-align:center;">
-                    <span id="pwdMsg"></span>
-                </td>
-            </tr>
-        </table>
-    </form>
-
-    <br/>
-    <div class="buttonContainer">
-        <button class="btn1" style="width:120px;">
-            <a href="index.html">·µ»ØÊ×Ò³</a>
-        </button>
-    </div>
-
-    <iframe name="usernameFrame" id="usernameFrame" style="display:none;" onload="handleUsernameFrame()"></iframe>
-    <iframe name="dataFrame" id="dataFrame" style="display:none;" onload="handleFrame()"></iframe>
+        } catch(e) {}
+    }
+</script>
 </body>
 </html>

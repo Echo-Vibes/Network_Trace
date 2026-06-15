@@ -1,205 +1,281 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="GBK">
-    <title>ÏµÍ³ĞÔÄÜ - WebTrackDB</title>
+    <meta charset="UTF-8">
+    <title>ç³»ç»Ÿæ€§èƒ½ - WebTrackDB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/modern.css">
     <style>
-        .ht { text-align: center; color: cadetblue; font-family: Î¢ÈíÑÅºÚ; }
-        .tab { width: 700px; border: 3px solid cadetblue; margin: 0px auto; border-radius: 5px; font-family: Î¢ÈíÑÅºÚ; border-collapse: collapse; }
-        .ltr td { border: 1px solid powderblue; padding: 8px 12px; }
-        .ltr th { border: 1px solid powderblue; padding: 8px 12px; background-color: powderblue; color: #333; font-weight: bold; }
-        .btn1 { border: 2px solid powderblue; border-radius: 4px; width: 120px; background-color: antiquewhite; font-family: Î¢ÈíÑÅºÚ; cursor: pointer; padding: 4px 0; }
-        .buttonContainer { text-align: center; }
-        a { color: cadetblue; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-        .bar-bg { background: #e0e0e0; border-radius: 4px; height: 20px; width: 200px; display: inline-block; vertical-align: middle; }
-        .bar-fill { display: inline-block; height: 20px; border-radius: 4px; transition: width 0.5s; }
-        .stat-label { width: 80px; display: inline-block; text-align: right; margin-right: 8px; font-weight: bold; }
-        .stat-value { display: inline-block; width: 70px; text-align: right; margin-left: 8px; font-family: Consolas, monospace; }
-        .if-row td { padding: 10px 12px; }
-        .if-name { font-weight: bold; font-size: 14px; }
-        .if-speed { font-family: Consolas, monospace; font-size: 13px; }
-        .if-arrow { color: cadetblue; }
-        .nodata { color: #999; text-align: center; }
+        .metric-card {
+            background: white;
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+        .metric-label {
+            font-size: 14px;
+            color: var(--gray);
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: var(--border);
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        .network-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .network-item:last-child {
+            border-bottom: none;
+        }
+        .network-name {
+            font-weight: 500;
+            color: var(--dark);
+        }
+        .network-speed {
+            display: flex;
+            gap: 16px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .speed-down { color: var(--primary); }
+        .speed-up { color: var(--secondary); }
+        .refresh-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--secondary);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+            margin-left: 8px;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
     </style>
-    <script>
-        var refreshTimer = null;
-
-        function startMonitor() {
-            fetchData();
-            if (refreshTimer) clearInterval(refreshTimer);
-            refreshTimer = setInterval(fetchData, 3000);
-        }
-
-        function fetchData() {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', '/monitor', true);
-            xhr.onload = function() {
-                if (xhr.status === 200) {
-                    try {
-                        var data = JSON.parse(xhr.responseText);
-                        renderData(data);
-                        document.getElementById('statusMsg').innerText = '';
-                    } catch (e) {
-                        handleBadResponse();
-                    }
-                } else {
-                    handleBadResponse();
-                }
-            };
-            xhr.onerror = function() {
-                document.getElementById('statusMsg').innerText = 'Á¬½ÓÊ§°Ü£¬ÕıÔÚÖØÊÔ...';
-            };
-            xhr.send();
-        }
-
-        function handleBadResponse() {
-            var text = (arguments[0] && arguments[0].currentTarget) ? arguments[0].currentTarget.responseText : '';
-            if (text.indexOf('login') !== -1 || text.indexOf('µÇÂ¼') !== -1) {
-                window.location.href = 'login.html';
-                return;
-            }
-            document.getElementById('statusMsg').innerText = 'Êı¾İ¼ÓÔØÊ§°Ü£¬ÕıÔÚÖØÊÔ...';
-        }
-
-        function renderData(data) {
-            if (data.error) {
-                document.getElementById('statusMsg').innerText = data.error;
-                return;
-            }
-            renderCpu(data.cpu);
-            renderMemory(data.memory);
-            renderNetwork(data.network);
-        }
-
-        function renderCpu(cpu) {
-            var pct = cpu.percent;
-            var fill = document.getElementById('cpuFill');
-            var val = document.getElementById('cpuVal');
-            if (pct < 0) {
-                fill.style.width = '0%';
-                fill.style.background = '#e0e0e0';
-                val.innerText = '-- %';
-                return;
-            }
-            fill.style.width = Math.min(pct, 100) + '%';
-            if (pct < 50) fill.style.background = '#5cb85c';
-            else if (pct < 80) fill.style.background = '#f0ad4e';
-            else fill.style.background = '#d9534f';
-            val.innerText = pct.toFixed(1) + ' %';
-        }
-
-        function renderMemory(mem) {
-            var fill = document.getElementById('memFill');
-            var val = document.getElementById('memVal');
-            var detail = document.getElementById('memDetail');
-            if (mem.percent < 0) {
-                fill.style.width = '0%';
-                fill.style.background = '#e0e0e0';
-                val.innerText = '-- %';
-                detail.innerText = '';
-                return;
-            }
-            fill.style.width = Math.min(mem.percent, 100) + '%';
-            if (mem.percent < 50) fill.style.background = '#5cb85c';
-            else if (mem.percent < 80) fill.style.background = '#f0ad4e';
-            else fill.style.background = '#d9534f';
-            val.innerText = mem.percent.toFixed(1) + ' %';
-            detail.innerText = formatSize(mem.used) + ' / ' + formatSize(mem.total);
-        }
-
-        function renderNetwork(nets) {
-            var tbody = document.getElementById('netBody');
-            tbody.innerHTML = '';
-            if (!nets || nets.length === 0) {
-                tbody.innerHTML = '<tr class="ltr"><td colspan="3" class="nodata">Î´¼ì²âµ½»î¶¯ÍøÂç½Ó¿Ú</td></tr>';
-                return;
-            }
-            for (var i = 0; i < nets.length; i++) {
-                var net = nets[i];
-                var tr = document.createElement('tr');
-                tr.className = 'ltr if-row';
-                var nameHtml = escapeHtml(net.name);
-                var downHtml = '<span class="if-arrow">¡ı</span> ' + formatBps(net.downloadBps);
-                var upHtml = '<span class="if-arrow">¡ü</span> ' + formatBps(net.uploadBps);
-                tr.innerHTML = '<td class="if-name">' + nameHtml + '</td>'
-                    + '<td class="if-speed">' + downHtml + '</td>'
-                    + '<td class="if-speed">' + upHtml + '</td>';
-                tbody.appendChild(tr);
-            }
-        }
-
-        function formatSize(bytes) {
-            if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(2) + ' GB';
-            if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
-            if (bytes >= 1024) return (bytes / 1024).toFixed(0) + ' KB';
-            return bytes + ' B';
-        }
-
-        function formatBps(bps) {
-            if (bps >= 1048576) return (bps / 1048576).toFixed(2) + ' MB/s';
-            if (bps >= 1024) return (bps / 1024).toFixed(1) + ' KB/s';
-            return bps + ' B/s';
-        }
-
-        function escapeHtml(s) {
-            if (!s) return '';
-            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        }
-
-        window.onload = startMonitor;
-        window.onbeforeunload = function() {
-            if (refreshTimer) clearInterval(refreshTimer);
-        };
-    </script>
 </head>
 <body>
-    <h1 class="ht">ÏµÍ³ĞÔÄÜ¼à¿Ø</h1>
-    <h3 class="ht"><a href="index.html">·µ»ØÊ×Ò³</a></h3>
-
-    <br/>
-    <table class="tab" cellspacing="0">
-        <tr class="ltr">
-            <th colspan="3">CPU &amp; ÄÚ´æ</th>
-        </tr>
-        <tr class="ltr">
-            <td style="width:80px;"><span class="stat-label">CPU</span></td>
-            <td>
-                <span class="bar-bg"><span class="bar-fill" id="cpuFill" style="width:0%;background:#e0e0e0;"></span></span>
-                <span class="stat-value" id="cpuVal">-- %</span>
-            </td>
-        </tr>
-        <tr class="ltr">
-            <td><span class="stat-label">ÄÚ´æ</span></td>
-            <td>
-                <span class="bar-bg"><span class="bar-fill" id="memFill" style="width:0%;background:#e0e0e0;"></span></span>
-                <span class="stat-value" id="memVal">-- %</span>
-            </td>
-        </tr>
-        <tr class="ltr">
-            <td></td>
-            <td style="font-size:12px;color:#666;" id="memDetail"></td>
-        </tr>
-    </table>
-
-    <br/>
-    <table class="tab" cellspacing="0">
-        <tr class="ltr">
-            <th style="width:200px;">ÍøÂç½Ó¿Ú</th>
-            <th style="width:150px;">ÏÂĞĞËÙ¶È</th>
-            <th style="width:150px;">ÉÏĞĞËÙ¶È</th>
-        </tr>
-        <tbody id="netBody">
-            <tr class="ltr"><td colspan="3" class="nodata">ÕıÔÚ¼ì²â...</td></tr>
-        </tbody>
-    </table>
-
-    <br/>
-    <div class="buttonContainer">
-        <button class="btn1"><a href="index.html">·µ»ØÊ×Ò³</a></button>
+<div class="container">
+    <div class="nav-bar">
+        <span class="nav-logo">ğŸŒ WebTrackDB</span>
+        <div class="nav-links">
+            <a href="index.html" style="color: var(--gray); text-decoration: none;">â† è¿”å›é¦–é¡µ</a>
+            <span style="font-size: 13px; color: var(--gray);">
+                    è‡ªåŠ¨åˆ·æ–° <span id="refreshStatus">â—</span>
+                </span>
+        </div>
     </div>
 
-    <br/>
-    <h4 class="ht" style="color:#999;" id="statusMsg"></h4>
+    <h1 class="page-title">ç³»ç»Ÿæ€§èƒ½ç›‘æ§</h1>
+    <p class="page-subtitle">å®æ—¶ CPUã€å†…å­˜ã€ç½‘ç»œæµé‡ç›‘æ§æ•°æ®</p>
+
+    <!-- CPU & å†…å­˜ åŒå¡ç‰‡ -->
+    <div class="grid-2" style="margin-bottom: 24px;">
+        <!-- CPU å¡ç‰‡ -->
+        <div class="metric-card">
+            <div class="metric-label">
+                <span>ğŸ–¥ï¸ CPU ä½¿ç”¨ç‡</span>
+                <span id="cpuVal" class="metric-value" style="font-size: 20px;">--%</span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="cpuFill" style="width: 0%;"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- å†…å­˜å¡ç‰‡ -->
+        <div class="metric-card">
+            <div class="metric-label">
+                <span>ğŸ’¾ å†…å­˜ä½¿ç”¨ç‡</span>
+                <span id="memVal" class="metric-value" style="font-size: 20px;">--%</span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="memFill" style="width: 0%;"></div>
+                </div>
+            </div>
+            <div style="margin-top: 12px; font-size: 12px; color: var(--gray);">
+                å·²ç”¨: <span id="memUsed">--</span> / æ€»è®¡: <span id="memTotal">--</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ç½‘ç»œæµé‡å¡ç‰‡ -->
+    <div class="card">
+        <div class="card-title">ğŸ“¡ ç½‘ç»œæµé‡ç›‘æ§</div>
+        <div id="netBody">
+            <div style="text-align:center; color:var(--gray); padding: 20px;">æ­£åœ¨æ£€æµ‹ç½‘ç»œæ¥å£...</div>
+        </div>
+    </div>
+
+    <!-- çŠ¶æ€ä¿¡æ¯ -->
+    <div id="statusMsg" style="text-align: center; margin-top: 16px; font-size: 13px; color: var(--gray);"></div>
+</div>
+
+<script>
+    var refreshTimer = null;
+
+    function startMonitor() {
+        fetchData();
+        if (refreshTimer) clearInterval(refreshTimer);
+        refreshTimer = setInterval(fetchData, 2000);
+    }
+
+    function fetchData() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/monitor', true);
+        xhr.timeout = 5000;
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                    renderData(data);
+                    document.getElementById('statusMsg').innerHTML = 'âœ… å®æ—¶ç›‘æ§ä¸­ <span class="refresh-indicator"></span>';
+                } catch (e) {
+                    handleError();
+                }
+            } else {
+                handleError();
+            }
+        };
+        xhr.onerror = handleError;
+        xhr.ontimeout = handleError;
+        xhr.send();
+    }
+
+    function handleError() {
+        document.getElementById('statusMsg').innerHTML = 'âš ï¸ è¿æ¥å¤±è´¥ï¼Œæ­£åœ¨é‡è¯•...';
+        document.getElementById('refreshStatus').innerHTML = 'ğŸ”´';
+    }
+
+    function renderData(data) {
+        if (data.error) {
+            if (data.error.includes('login')) window.location.href = 'login.html';
+            document.getElementById('statusMsg').innerHTML = 'âŒ ' + data.error;
+            return;
+        }
+        renderCpu(data.cpu);
+        renderMemory(data.memory);
+        renderNetwork(data.network);
+        document.getElementById('refreshStatus').innerHTML = 'ğŸŸ¢';
+    }
+
+    function renderCpu(cpu) {
+        var pct = cpu.percent;
+        var fill = document.getElementById('cpuFill');
+        var val = document.getElementById('cpuVal');
+        var cores = document.getElementById('cpuCores');
+
+        if (cpu.cores) cores.innerText = cpu.cores;
+
+        if (pct < 0 || pct === undefined) {
+            fill.style.width = '0%';
+            fill.style.background = '#e2e8f0';
+            val.innerText = '--%';
+            return;
+        }
+
+        fill.style.width = Math.min(pct, 100) + '%';
+        if (pct < 50) fill.style.background = '#10b981';
+        else if (pct < 80) fill.style.background = '#f59e0b';
+        else fill.style.background = '#ef4444';
+        val.innerText = pct.toFixed(1) + '%';
+    }
+
+    function renderMemory(mem) {
+        var fill = document.getElementById('memFill');
+        var val = document.getElementById('memVal');
+        var usedSpan = document.getElementById('memUsed');
+        var totalSpan = document.getElementById('memTotal');
+
+        if (mem.percent < 0 || mem.percent === undefined) {
+            fill.style.width = '0%';
+            fill.style.background = '#e2e8f0';
+            val.innerText = '--%';
+            usedSpan.innerText = '--';
+            totalSpan.innerText = '--';
+            return;
+        }
+
+        fill.style.width = Math.min(mem.percent, 100) + '%';
+        if (mem.percent < 50) fill.style.background = '#10b981';
+        else if (mem.percent < 80) fill.style.background = '#f59e0b';
+        else fill.style.background = '#ef4444';
+        val.innerText = mem.percent.toFixed(1) + '%';
+        usedSpan.innerText = formatSize(mem.used);
+        totalSpan.innerText = formatSize(mem.total);
+    }
+
+    function renderNetwork(nets) {
+        var container = document.getElementById('netBody');
+        if (!nets || nets.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:var(--gray); padding: 20px;">æœªæ£€æµ‹åˆ°æ´»åŠ¨ç½‘ç»œæ¥å£</div>';
+            return;
+        }
+
+        var html = '';
+        for (var i = 0; i < nets.length; i++) {
+            var net = nets[i];
+            html += '<div class="network-item">' +
+                '<span class="network-name">' + escapeHtml(net.name) + '</span>' +
+                '<div class="network-speed">' +
+                '<span class="speed-down">ğŸ“¥ ' + formatBps(net.downloadBps) + '</span>' +
+                '<span class="speed-up">ğŸ“¤ ' + formatBps(net.uploadBps) + '</span>' +
+                '</div></div>';
+        }
+        container.innerHTML = html;
+    }
+
+    function formatSize(bytes) {
+        if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(2) + ' GB';
+        if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
+        if (bytes >= 1024) return (bytes / 1024).toFixed(0) + ' KB';
+        return bytes + ' B';
+    }
+
+    function formatBps(bps) {
+        if (bps >= 1048576) return (bps / 1048576).toFixed(2) + ' MB/s';
+        if (bps >= 1024) return (bps / 1024).toFixed(1) + ' KB/s';
+        return bps + ' B/s';
+    }
+
+    function escapeHtml(s) {
+        if (!s) return '';
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    window.onload = startMonitor;
+    window.onbeforeunload = function() {
+        if (refreshTimer) clearInterval(refreshTimer);
+    };
+</script>
 </body>
 </html>

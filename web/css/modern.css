@@ -208,6 +208,25 @@ body {
     box-shadow: var(--shadow);
 }
 
+/* 返回首页按钮样式 - 渐变紫背景 + 亮白色字体，悬停向上浮动 */
+.nav-links a[href="index.html"],
+.nav-links a[href*="index.html"] {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #ffffff !important;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 20px;
+    text-decoration: none;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
+    display: inline-block;
+}
+
+.nav-links a[href="index.html"]:hover,
+.nav-links a[href*="index.html"]:hover {
+    transform: translateY(-3px);
+}
+
 .nav-logo {
     font-weight: 700;
     font-size: 18px;
