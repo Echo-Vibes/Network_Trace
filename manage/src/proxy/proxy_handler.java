@@ -54,6 +54,15 @@ public class proxy_handler implements Runnable {
             
             // 提取域名
             String domain = extract_domain(url, method);
+
+            // 跳过 localhost/127.0.0.1 目标，让浏览器直连
+            if (domain.equals("localhost") || domain.equals("127.0.0.1")
+                    || domain.startsWith("localhost:") || domain.startsWith("127.0.0.1:")) {
+                System.out.println("[proxy] local request, closing proxy connection");
+                client_socket.close();
+                return;
+            }
+            System.out.println("直连 ");
             System.out.println("[代理处理] 原始URL: " + url);
             System.out.println("[代理处理] 提取域名: " + domain);
             System.out.println("[代理处理] 请求方法: " + method);

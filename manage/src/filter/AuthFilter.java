@@ -25,6 +25,11 @@ public class AuthFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse resp = (HttpServletResponse) response;
 
+        if ("OPTIONS".equalsIgnoreCase(req.getMethod())) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         String path = req.getRequestURI();
         String contextPath = req.getContextPath();
         String relativePath = path;
@@ -33,7 +38,8 @@ public class AuthFilter implements Filter {
         }
 
         // 放行：登录页面、登录接口、静态资源（如果有的话）
-        if (relativePath.equals("/login") || relativePath.equals("/login.html") || relativePath.equals("/") || relativePath.isEmpty()) {
+        if (relativePath.equals("/login") || relativePath.equals("/login.html") || relativePath.equals("/") || relativePath.isEmpty()
+                || relativePath.startsWith("/assets/") || relativePath.endsWith(".svg") || relativePath.endsWith(".ico")) {
             chain.doFilter(request, response);
             return;
         }
@@ -42,7 +48,14 @@ public class AuthFilter implements Filter {
         if (session != null && session.getAttribute("admin") != null) {
             chain.doFilter(request, response);
         } else {
-            resp.sendRedirect("login.html");
+            String accept = req.getHeader("Accept");
+            if (accept != null && accept.contains("application/json")) {
+                resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                resp.setContentType("application/json; charset=UTF-8");
+                resp.getWriter().print("{\"code\":401,\"msg\":\"未登录\"}");
+            } else {
+                resp.sendRedirect("login.html");
+            }
         }
     }
 
