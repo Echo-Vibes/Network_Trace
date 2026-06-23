@@ -124,15 +124,12 @@
     }
 
     function deleteItem(id) {
-        if (confirm('确定要删除这条黑名单规则吗？')) {
-            // 创建临时表单提交删除请求
-            var frame = document.getElementById('dataFrame');
-            frame.onload = function() {
-                frame.onload = renderData;
-                renderData();
-            };
-            window.location.href = '/blacklist?delete=' + id;
-        }
+       
+        fetch('/blacklist?delete=' + id)
+            .then(function() {
+                document.getElementById('loadForm').submit();
+            });
+
     }
 
     function showMsg(msg, type) {
