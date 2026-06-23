@@ -21,12 +21,12 @@ public class TestDBConnection {
 
             System.out.println("数据库连接成功！");
             System.out.println("\n当前 Blacklist 表中的数据：");
-            System.out.println("ID | Keyword");
+            System.out.println("ID | URL");
             System.out.println("---|---------");
 
             while (rs.next()) {
-                int id = rs.getInt("ID");
-                String keyword = rs.getString("Keyword");
+                int id = rs.getInt("id");
+                String keyword = rs.getString("url");
                 System.out.printf("%d  | %s%n", id, keyword);
             }
 
